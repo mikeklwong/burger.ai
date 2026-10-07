@@ -1,7 +1,7 @@
 import React from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { Home, Compass, Plus, Bell, User as UserIcon } from "lucide-react";
-import { base44 } from "@/api/base44Client";
+import { api } from "@/api/client";
 
 export default function BottomNav() {
   const navigate = useNavigate();
@@ -11,9 +11,9 @@ export default function BottomNav() {
     let active = true;
     (async () => {
       try {
-        const me = await base44.auth.me();
+        const me = await api.auth.me();
         if (!me) return;
-        const n = await base44.entities.Notification.filter({ user_id: me.id, read: false }, "-created_date", 50);
+        const n = await api.entities.Notification.filter({ user_id: me.id, read: false }, "-created_date", 50);
         if (active) setUnread(n.length);
       } catch (e) {}
     })();
@@ -35,6 +35,7 @@ export default function BottomNav() {
           <span>Explore</span>
         </NavLink>
         <button
+          aria-label="Upload an outfit"
           onClick={() => navigate("/upload")}
           className="flex flex-1 flex-col items-center justify-center"
         >

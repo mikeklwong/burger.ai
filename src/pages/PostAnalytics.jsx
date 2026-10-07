@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
-import { base44 } from "@/api/base44Client";
+import { api } from "@/api/client";
 import { ArrowLeft, Eye, Star } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from "recharts";
 import { RATINGS } from "@/lib/ratings";
@@ -18,11 +18,11 @@ export default function PostAnalytics() {
   useEffect(() => {
     (async () => {
       try {
-        const me = await base44.auth.me();
-        const p = await base44.entities.Post.get(id);
+        const me = await api.auth.me();
+        const p = await api.entities.Post.get(id);
         if (p.author_id !== me.id) { navigate(`/post/${id}`); return; }
         setPost(p);
-        const rs = await base44.entities.Rating.filter({ post_id: id }, "-created_date", 1000);
+        const rs = await api.entities.Rating.filter({ post_id: id }, "-created_date", 1000);
         setRatings(rs);
         setRaters(await loadUsersByIds(rs.map((r) => r.user_id)));
       } catch (e) {} finally {

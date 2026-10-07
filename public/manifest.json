@@ -1,13 +1,13 @@
 {
   "name": "burger.ai",
   "short_name": "burger.ai",
-  "description": "Post your fits, get rated Burger/Mid/Fire/Tuff by the community.",
+  "description": "Post your fits, get rated Burger/Mid/Fire/Tuff/Iconic by the community.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#1a1410",
   "theme_color": "#1a1410",
   "orientation": "portrait",
   "icons": [
-    { "src": "https://base44.com/logo_v2.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+    { "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
   ]
 }

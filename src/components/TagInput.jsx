@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { base44 } from "@/api/base44Client";
+import { api } from "@/api/client";
 import { normalizeTag } from "@/lib/ratings";
 import { X } from "lucide-react";
 
@@ -12,7 +12,7 @@ export default function TagInput({ tags, onChange, max = 8 }) {
   useEffect(() => {
     (async () => {
       try {
-        const posts = await base44.entities.Post.list("-created_date", 200);
+        const posts = await api.entities.Post.list("-created_date", 200);
         const counts = {};
         posts.forEach((p) => (p.tags || []).forEach((t) => { const nt = normalizeTag(t); if (nt) counts[nt] = (counts[nt] || 0) + 1; }));
         setAllTags(counts);

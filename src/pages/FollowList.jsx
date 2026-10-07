@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
-import { base44 } from "@/api/base44Client";
+import { api } from "@/api/client";
 import UserAvatar from "@/components/UserAvatar";
 import FollowButton from "@/components/FollowButton";
 import { loadUsersByIds } from "@/lib/users";
@@ -15,9 +15,9 @@ export default function FollowList() {
       try {
         let follows;
         if (type === "followers") {
-          follows = await base44.entities.Follow.filter({ following_id: id }, "-created_date", 500);
+          follows = await api.entities.Follow.filter({ following_id: id }, "-created_date", 500);
         } else {
-          follows = await base44.entities.Follow.filter({ follower_id: id }, "-created_date", 500);
+          follows = await api.entities.Follow.filter({ follower_id: id }, "-created_date", 500);
         }
         const ids = follows.map((f) => (type === "followers" ? f.follower_id : f.following_id));
         const map = await loadUsersByIds(ids);

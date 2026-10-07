@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
+import { api } from "@/api/client";
 import { useToast } from "@/components/ui/use-toast";
 import { Heart, HeartOff } from "lucide-react";
 
@@ -11,8 +11,8 @@ export default function InterestButtons({ post }) {
   useEffect(() => {
     (async () => {
       try {
-        const me = await base44.auth.me();
-        const existing = await base44.entities.PostInterest.filter({ user_id: me.id, post_id: post.id }, "-created_date", 1);
+        const me = await api.auth.me();
+        const existing = await api.entities.PostInterest.filter({ user_id: me.id, post_id: post.id }, "-created_date", 1);
         if (existing.length) setState(existing[0].value);
       } catch (e) {}
     })();
@@ -21,13 +21,13 @@ export default function InterestButtons({ post }) {
   const mark = async (value) => {
     setLoading(true);
     try {
-      const me = await base44.auth.me();
+      const me = await api.auth.me();
       if (state === value) {
-        await base44.entities.PostInterest.deleteMany({ user_id: me.id, post_id: post.id });
+        await api.entities.PostInterest.deleteMany({ user_id: me.id, post_id: post.id });
         setState(null);
       } else {
-        await base44.entities.PostInterest.deleteMany({ user_id: me.id, post_id: post.id });
-        await base44.entities.PostInterest.create({ user_id: me.id, post_id: post.id, value });
+        await api.entities.PostInterest.deleteMany({ user_id: me.id, post_id: post.id });
+        await api.entities.PostInterest.create({ user_id: me.id, post_id: post.id, value });
         setState(value);
         toast({ title: value === "interested" ? "We'll show more like this" : "We'll show less like this" });
       }

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
+import { api } from "@/api/client";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
@@ -15,8 +15,8 @@ export default function SaveSheet({ open, onOpenChange, postId }) {
   const load = async () => {
     setLoading(true);
     try {
-      const me = await base44.auth.me();
-      const cs = await base44.entities.Collection.filter({ user_id: me.id }, "-created_date", 200);
+      const me = await api.auth.me();
+      const cs = await api.entities.Collection.filter({ user_id: me.id }, "-created_date", 200);
       setCollections(cs);
     } catch (e) {} finally {
       setLoading(false);
@@ -32,7 +32,7 @@ export default function SaveSheet({ open, onOpenChange, postId }) {
       const has = ids.includes(postId);
       const next = has ? ids.filter((x) => x !== postId) : [...ids, postId];
       const cover = !has && ids.length === 0 ? postId : col.cover_post_id;
-      await base44.entities.Collection.update(col.id, { post_ids: next, cover_post_id: cover });
+      await api.entities.Collection.update(col.id, { post_ids: next, cover_post_id: cover });
       setCollections((prev) => prev.map((c) => c.id === col.id ? { ...c, post_ids: next, cover_post_id: cover } : c));
       if (!has) toast({ title: `Saved to "${col.name}"` });
     } catch (e) {
@@ -47,8 +47,8 @@ export default function SaveSheet({ open, onOpenChange, postId }) {
     if (!name) return;
     setBusy(true);
     try {
-      const me = await base44.auth.me();
-      const c = await base44.entities.Collection.create({ user_id: me.id, name, post_ids: [postId], is_public: false, cover_post_id: postId });
+      const me = await api.auth.me();
+      const c = await api.entities.Collection.create({ user_id: me.id, name, post_ids: [postId], is_public: false, cover_post_id: postId });
       setCollections((prev) => [c, ...prev]);
       setNewName("");
       toast({ title: `Saved to "${name}"` });

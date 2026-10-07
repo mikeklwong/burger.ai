@@ -4,11 +4,20 @@
 
 burger.ai is an AI-powered fashion social platform with an Instagram-style photo feed. Share your outfits, rate other people's fits, receive community feedback, and discover creators whose style matches yours.
 
-This repository contains the React application, Base44 backend entities and functions, and the original source export. Running the platform requires a configured Base44 app; downloading the repository does not create a backend or deploy a live website.
+**Run it without any service configuration:**
+
+```bash
+npm install
+npm run dev
+```
+
+Requires Node.js 22.12 or newer. Open **http://localhost:5173** and choose **Try the demo**, or register with an email and password. The app creates its database and upload folder automatically. No Base44 account, API key, or payment setup is needed.
+
+This repository includes the React frontend, its own Node.js backend, local sample outfits, and the original source archive. People using the same running server share its data. Cloning the repository starts your own instance; it does not connect to a global network.
 
 ## Get started on the platform
 
-1. Register or sign in to the configured app.
+1. Choose **Try the demo** for a guest account, or register and log in.
 2. Complete onboarding: choose a unique handle and display name, optionally add a profile photo, and write a short bio.
 3. Pick favorite style categories and follow tags to personalize your feed.
 4. Follow suggested creators, then select **Enter burger.ai**.
@@ -37,7 +46,7 @@ The bottom navigation keeps the main screens within reach:
 4. Tap **Post fit** and wait for the image safety check and post creation.
 5. The app attempts to generate an AI style description, then opens your post so you can see community feedback.
 
-The current app allows one post per day on the free plan and three on Pro. The upload screen shows your remaining allowance. AI description generation is optional: a post can still succeed if that step fails.
+Everyone can share up to 20 outfits per rolling 24 hours. Upload PNG, JPEG, WebP, or GIF images up to 8 MB. The upload screen shows the remaining allowance. Without an optional AI key, style notes use your category and tags; no automated image-content check runs.
 
 ## Rate fits and receive feedback
 
@@ -64,31 +73,32 @@ Open your own posts from **Profile** to review the rating distribution and comme
 - Use the flag control to report a post or profile. Block accounts from their profiles, and manage them in **Settings → Blocked accounts**.
 - Open **Settings** to edit your profile, choose a theme, view notifications, or replay the tutorial.
 
-Pro screens include additional posting capacity, profile views, and analytics. Subscription features depend on the app's Stripe configuration.
+Profile visits, analytics, and collections are included for everyone in this free edition. There is no paid subscription or checkout.
 
 ## How the AI fits in
 
-The backend uses Base44's LLM integration to describe garments, colors, silhouettes, and the overall style in an uploaded image. It also asks for a 32-number style representation used in similarity scoring. Feed ranking combines these signals with categories, tags, ratings, interests, and popularity. A separate AI function checks images for explicit content.
+The standalone app always supports category/tag-based recommendations. With an optional server-side OpenAI key, it can inspect outfit photos to describe garments, colors, silhouettes, and overall style, and check for explicit imagery. Without a key, it uses clearly labeled tag-based style notes instead. Your community ratings remain separate from AI descriptions.
 
-These are prototype features: generated descriptions and moderation results can be inaccurate, and the style representation is LLM-generated rather than a dedicated trained embedding model.
+The recommendation vector is a deterministic representation of categories and tags. AI is optional and its descriptions can be inaccurate. See the [development guide](docs/development.md) for setup, data storage, optional AI, account recovery, and self-hosting.
 
-## Run the project
-
-Prerequisites: Node.js compatible with Vite 8, npm, the Base44 CLI, Deno for the local backend, and access to a configured Base44 app.
+## Build and run
 
 ```bash
-git clone https://github.com/mikeklwong/burger.ai.git
-cd burger.ai
-npm install
-npm install -g base44@latest
-base44 login
-base44 link
-base44 dev
+npm ci
+npm run build
+npm start
 ```
 
-Open the frontend address printed by `base44 dev`. Each clone must be linked to its Base44 app. Core integrations and OAuth still depend on the hosted app, which must be published at least once.
+Open **http://127.0.0.1:3001**. The Node server serves the frontend and API together. To share an instance online, host it on a Node-capable service with persistent storage and HTTPS. The repository is not a live deployment.
 
-See the [development guide](docs/development.md) for backend modes, configuration, checks, and publishing.
+## Checks
+
+```bash
+npm test
+npm run typecheck
+npm run lint
+npm run build
+```
 
 ## Repository layout
 
@@ -97,8 +107,9 @@ See the [development guide](docs/development.md) for backend modes, configuratio
 | `src/pages/` | Feed, discovery, upload, profiles, authentication, settings, and Pro screens |
 | `src/components/` | Navigation, post cards, ratings, collections, and shared UI |
 | `src/lib/` | Ranking, taste profiles, ratings, themes, and authentication helpers |
-| `base44/entities/` | Schemas for posts, users, ratings, follows, collections, and more |
-| `base44/functions/` | Posting, ratings, follows, AI descriptions, moderation, and Stripe handlers |
+| `server/` | Authentication, persistent data, uploads, social actions, and optional AI |
+| `scripts/` | One-command development startup and operator account recovery |
+| `tests/` | Backend integration and permission tests |
 | `public/` | Static app assets |
 | `docs/` | Developer setup guidance |
 | `archives/burger-ai-source.tar.gz` | Unmodified original uploaded source archive |

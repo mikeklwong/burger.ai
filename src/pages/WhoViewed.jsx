@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { base44 } from "@/api/base44Client";
+import { api } from "@/api/client";
 import UserAvatar from "@/components/UserAvatar";
 import { Button } from "@/components/ui/button";
 import { loadUsersByIds } from "@/lib/users";
@@ -16,9 +16,9 @@ export default function WhoViewed() {
   useEffect(() => {
     (async () => {
       try {
-        const m = await base44.auth.me();
+        const m = await api.auth.me();
         setMe(m);
-        const vs = await base44.entities.ProfileView.filter({ viewed_user_id: m.id }, "-viewed_at", 200);
+        const vs = await api.entities.ProfileView.filter({ viewed_user_id: m.id }, "-viewed_at", 200);
         setViews(vs);
         const aMap = await loadUsersByIds(vs.map((v) => v.viewer_id));
         setViewers(aMap);

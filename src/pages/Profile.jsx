@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
-import { base44 } from "@/api/base44Client";
+import { api } from "@/api/client";
 import UserAvatar from "@/components/UserAvatar";
 import PostGrid from "@/components/PostGrid";
 import CollectionCard from "@/components/CollectionCard";
@@ -27,22 +27,22 @@ export default function Profile() {
 
   const load = async () => {
     try {
-      const me = await base44.auth.me();
-      let target = id === "me" ? me : await base44.entities.User.get(id);
+      const me = await api.auth.me();
+      let target = id === "me" ? me : await api.entities.User.get(id);
       if (!target) { navigate("/"); return; }
       setUser(target);
       setIsMe(target.id === me.id);
 
-      const userPosts = await base44.entities.Post.filter({ author_id: target.id }, "-created_date", 200);
+      const userPosts = await api.entities.Post.filter({ author_id: target.id }, "-created_date", 200);
       setPosts(userPosts);
 
-      const fwers = await base44.entities.Follow.filter({ following_id: target.id }, "-created_date", 500);
+      const fwers = await api.entities.Follow.filter({ following_id: target.id }, "-created_date", 500);
       setFollowers(fwers.length);
-      const fwing = await base44.entities.Follow.filter({ follower_id: target.id }, "-created_date", 500);
+      const fwing = await api.entities.Follow.filter({ follower_id: target.id }, "-created_date", 500);
       setFollowing(fwing.length);
 
       // collections (own: all; others: public only)
-      const cols = await base44.entities.Collection.filter({ user_id: target.id }, "-created_date", 200);
+      const cols = await api.entities.Collection.filter({ user_id: target.id }, "-created_date", 200);
       const visCols = target.id === me.id ? cols : cols.filter((c) => c.is_public);
       setCollections(visCols);
       const coverIds = [...new Set(visCols.map((c) => c.cover_post_id).filter(Boolean))];
@@ -50,15 +50,15 @@ export default function Profile() {
         const cps = [];
         for (let i = 0; i < coverIds.length; i += 50) {
           const chunk = coverIds.slice(i, i + 50);
-          const ps = await base44.entities.Post.filter({ id: { $in: chunk } }, "-created_date", 50);
+          const ps = await api.entities.Post.filter({ id: { $in: chunk } }, "-created_date", 50);
           cps.push(...ps);
         }
         setCoverPosts(Object.fromEntries(cps.map((p) => [p.id, p])));
       }
 
       if (target.id !== me.id) {
-        const myBlock = await base44.entities.Block.filter({ blocker_id: me.id, blocked_id: target.id }, "-created_date", 1);
-        const theirBlock = await base44.entities.Block.filter({ blocker_id: target.id, blocked_id: me.id }, "-created_date", 1);
+        const myBlock = await api.entities.Block.filter({ blocker_id: me.id, blocked_id: target.id }, "-created_date", 1);
+        const theirBlock = await api.entities.Block.filter({ blocker_id: target.id, blocked_id: me.id }, "-created_date", 1);
         setIBlocked(myBlock.length > 0);
         setTheyBlockedMe(theirBlock.length > 0);
       }
@@ -67,10 +67,10 @@ export default function Profile() {
       if (target.id !== me.id) {
         try {
           const today = new Date().toISOString().slice(0, 10);
-          const existing = await base44.entities.ProfileView.filter({ viewer_id: me.id, viewed_user_id: target.id }, "-viewed_at", 50);
+          const existing = await api.entities.ProfileView.filter({ viewer_id: me.id, viewed_user_id: target.id }, "-viewed_at", 50);
           const todayView = existing.find((v) => (v.viewed_at || "").slice(0, 10) === today);
           if (!todayView) {
-            await base44.entities.ProfileView.create({ viewer_id: me.id, viewed_user_id: target.id, viewed_at: new Date().toISOString() });
+            await api.entities.ProfileView.create({ viewer_id: me.id, viewed_user_id: target.id, viewed_at: new Date().toISOString() });
           }
         } catch (e) {}
       }
@@ -86,8 +86,8 @@ export default function Profile() {
     const reason = prompt("Reason for reporting this profile?");
     if (!reason) return;
     try {
-      const me = await base44.auth.me();
-      await base44.entities.Report.create({ reporter_id: me.id, target_type: "user", target_id: user.id, reason });
+      const me = await api.auth.me();
+      await api.entities.Report.create({ reporter_id: me.id, target_type: "user", target_id: user.id, reason });
       toast({ title: "Reported." });
     } catch (e) {}
   };
@@ -96,8 +96,8 @@ export default function Profile() {
     const name = prompt("Collection name?");
     if (!name) return;
     try {
-      const me = await base44.auth.me();
-      const c = await base44.entities.Collection.create({ user_id: me.id, name: name.slice(0, 60), post_ids: [], is_public: false });
+      const me = await api.auth.me();
+      const c = await api.entities.Collection.create({ user_id: me.id, name: name.slice(0, 60), post_ids: [], is_public: false });
       setCollections((prev) => [c, ...prev]);
       setTab("collections");
       toast({ title: "Collection created" });

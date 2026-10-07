@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { base44 } from "@/api/base44Client";
+import { api } from "@/api/client";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 import UserAvatar from "@/components/UserAvatar";
@@ -30,7 +30,7 @@ export default function Onboarding() {
   React.useEffect(() => {
     (async () => {
       try {
-        const m = await base44.auth.me();
+        const m = await api.auth.me();
         setMe(m);
         setUsername(m.username || "");
         setDisplayName(m.display_name || m.full_name || "");
@@ -44,7 +44,7 @@ export default function Onboarding() {
     if (step !== 1 || !username) return;
     const t = setTimeout(async () => {
       try {
-        const users = await base44.entities.User.filter({}, "-created_date", 200);
+        const users = await api.entities.User.filter({}, "-created_date", 200);
         const taken = users.some((u) => u.username?.toLowerCase() === username.toLowerCase() && u.id !== me.id);
         setUsernameOk(!taken && username.length >= 3);
       } catch (e) {}
@@ -56,7 +56,7 @@ export default function Onboarding() {
     if (step !== 5) return;
     (async () => {
       try {
-        const users = await base44.entities.User.filter({}, "-created_date", 100);
+        const users = await api.entities.User.filter({}, "-created_date", 100);
         setSuggested(users.filter((u) => u.id !== me.id).slice(0, 8));
       } catch (e) {}
     })();
@@ -67,7 +67,7 @@ export default function Onboarding() {
     if (!file) return;
     setPic(URL.createObjectURL(file));
     try {
-      const { file_url } = await base44.integrations.Core.UploadPublicFile({ file });
+      const { file_url } = await api.integrations.Core.UploadPublicFile({ file });
       setPicUrl(file_url);
     } catch (err) {}
   };
@@ -81,14 +81,14 @@ export default function Onboarding() {
   const finish = async () => {
     setSaving(true);
     try {
-      await base44.auth.updateMe({
+      await api.auth.updateMe({
         username, display_name: displayName, bio: bio.slice(0, 150),
         profile_picture: picUrl, favorite_categories: favCats, followed_tags: favTags,
         onboarding_complete: true,
       });
       // seed taste profile
       const tp = seedTasteProfile(favCats, favTags);
-      await base44.entities.UserTasteProfile.create({ user_id: me.id, ...tp });
+      await api.entities.UserTasteProfile.create({ user_id: me.id, ...tp });
       toast({ title: "Welcome to burger.ai! 🔥" });
       navigate("/");
     } catch (e) {
@@ -116,11 +116,11 @@ export default function Onboarding() {
               <div key={r.value} className="flex flex-col items-center gap-1 rounded-2xl p-4" style={{ backgroundColor: r.bg }}>
                 <span className="text-3xl">{r.emoji}</span>
                 <span className="font-bold text-white">{r.text}</span>
-                <span className="text-xs text-white/80">{r.score}/4</span>
+                <span className="text-xs text-white/80">{r.score}/5</span>
               </div>
             ))}
           </div>
-          <p className="mb-8 text-sm text-muted-foreground">🍔 Burger = bad · 😐 Mid = meh · 🔥 Fire = great · 💜 Tuff = elite</p>
+          <p className="mb-8 text-sm text-muted-foreground">🍔 Burger = bad · 😐 Mid = meh · 🔥 Fire = great · 💜 Tuff = elite · 👑 Iconic = rare standout</p>
         </div>
       )}
 

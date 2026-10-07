@@ -29,15 +29,15 @@ export function formatCount(n) {
 }
 
 export function avgScoreFromCounts(counts) {
-  const { burger = 0, mid = 0, fire = 0, tuff = 0, iconic = 0 } = counts || {};
+  const { rating_burger: burger = 0, rating_mid: mid = 0, rating_fire: fire = 0, rating_tuff: tuff = 0, rating_iconic: iconic = 0 } = counts || {};
   const total = burger + mid + fire + tuff + iconic;
   if (!total) return 0;
   return (burger * 1 + mid * 2 + fire * 3 + tuff * 4 + iconic * 5) / total;
 }
 
 export function distribution(counts) {
-  const { burger = 0, mid = 0, fire = 0, tuff = 0, iconic = 0 } = counts || {};
+  const { rating_burger: burger = 0, rating_mid: mid = 0, rating_fire: fire = 0, rating_tuff: tuff = 0, rating_iconic: iconic = 0 } = counts || {};
   const total = burger + mid + fire + tuff + iconic;
-  if (!total) return RATINGS.map((r) => ({ ...r, pct: 0, count: counts[r.value] || 0 }));
-  return RATINGS.map((r) => ({ ...r, pct: ((counts[r.value] || 0) / total) * 100, count: counts[r.value] || 0 }));
+  if (!total) return RATINGS.map((r) => ({ ...r, pct: 0, count: counts?.[`rating_${r.value}`] || 0 }));
+  return RATINGS.map((r) => ({ ...r, pct: ((counts?.[`rating_${r.value}`] || 0) / total) * 100, count: counts?.[`rating_${r.value}`] || 0 }));
 }

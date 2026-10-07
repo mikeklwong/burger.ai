@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { base44 } from "@/api/base44Client";
+import { api } from "@/api/client";
 import PostCard from "@/components/PostCard";
 import CategoryChips from "@/components/CategoryChips";
 import { loadUsersByIds } from "@/lib/users";
@@ -21,26 +21,26 @@ export default function Home() {
   const loadFeed = useCallback(async (reset = false) => {
     setLoading(true);
     try {
-      const me = await base44.auth.me();
+      const me = await api.auth.me();
       const hiddenIds = await getHiddenUserIds(me.id);
 
-      let allPosts = await base44.entities.Post.list("-created_date", 200);
+      let allPosts = await api.entities.Post.list("-created_date", 200);
       allPosts = allPosts.filter((p) => !hiddenIds.has(p.author_id));
-      const myInterests = await base44.entities.PostInterest.filter({ user_id: me.id }, "-created_date", 200);
+      const myInterests = await api.entities.PostInterest.filter({ user_id: me.id }, "-created_date", 200);
       const markedIds = new Set(myInterests.map((i) => i.post_id));
       allPosts = allPosts.filter((p) => !markedIds.has(p.id));
       if (category) allPosts = allPosts.filter((p) => p.category === category);
 
       let ranked = [];
       if (tab === "following") {
-        const follows = await base44.entities.Follow.filter({ follower_id: me.id }, "-created_date", 500);
+        const follows = await api.entities.Follow.filter({ follower_id: me.id }, "-created_date", 500);
         const ids = new Set(follows.map((f) => f.following_id));
-        ranked = allPosts.filter((p) => ids.has(p.author_id)).sort((a, b) => new Date(b.created_date) - new Date(a.created_date));
+        ranked = allPosts.filter((p) => ids.has(p.author_id)).sort((a, b) => new Date(b.created_date).getTime() - new Date(a.created_date).getTime());
       } else if (tab === "trending") {
         ranked = rankTrending(allPosts);
       } else {
         // foryou
-        const myRatings = await base44.entities.Rating.filter({ user_id: me.id }, "-created_date", 500);
+        const myRatings = await api.entities.Rating.filter({ user_id: me.id }, "-created_date", 500);
         const ratedIds = new Set(myRatings.map((r) => r.post_id));
         allPosts = allPosts.filter((p) => !ratedIds.has(p.id));
         // build interest signal posts for similarity scoring
@@ -48,14 +48,14 @@ export default function Home() {
         let interestPosts = [];
         for (let i = 0; i < interestIds.length; i += 50) {
           const chunk = interestIds.slice(i, i + 50);
-          interestPosts.push(...await base44.entities.Post.filter({ id: { $in: chunk } }, "-created_date", 50));
+          interestPosts.push(...await api.entities.Post.filter({ id: { $in: chunk } }, "-created_date", 50));
         }
         const ipMap = new Map(interestPosts.map((p) => [p.id, p]));
         const interestedPosts = myInterests.filter((i) => i.value === "interested").map((i) => ipMap.get(i.post_id)).filter(Boolean);
         const notInterestedPosts = myInterests.filter((i) => i.value === "not_interested").map((i) => ipMap.get(i.post_id)).filter(Boolean);
         const interests = { interested: interestedPosts, notInterested: notInterestedPosts };
         let tp;
-        const tpList = await base44.entities.UserTasteProfile.filter({ user_id: me.id }, "-updated_date", 1);
+        const tpList = await api.entities.UserTasteProfile.filter({ user_id: me.id }, "-updated_date", 1);
         tp = tpList[0] || emptyTasteProfile();
         if (myRatings.length < 10) {
           // cold start: blend trending

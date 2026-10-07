@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { RATINGS, RATING_WORDS } from "@/lib/ratings";
-import { base44 } from "@/api/base44Client";
+import { api } from "@/api/client";
 import { useToast } from "@/components/ui/use-toast";
 import { Lock } from "lucide-react";
+import { updateTasteProfile } from "@/lib/feed";
 
-export default function RatingButtons({ post, currentRating, currentWord, onRated, disabled }) {
+export default function RatingButtons({ post, currentRating, currentWord, onRated = undefined, disabled = false }) {
   const { toast } = useToast();
   const [active, setActive] = useState(currentRating);
   const [wordActive, setWordActive] = useState(currentWord || null);
@@ -16,9 +17,9 @@ export default function RatingButtons({ post, currentRating, currentWord, onRate
   useEffect(() => {
     (async () => {
       try {
-        const me = await base44.auth.me();
+        const me = await api.auth.me();
         const weekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
-        const recent = await base44.entities.Rating.filter({ user_id: me.id }, "-created_date", 500);
+        const recent = await api.entities.Rating.filter({ user_id: me.id }, "-created_date", 500);
         const weekly = recent.filter((r) => new Date(r.created_date).getTime() >= weekAgo && r.post_id !== post.id);
         const iconicThisWeek = weekly.filter((r) => r.value === "iconic").length;
         const allowed = Math.max(1, Math.floor(weekly.length * 0.01));
@@ -36,7 +37,7 @@ export default function RatingButtons({ post, currentRating, currentWord, onRate
     setLoading(true);
     const prev = active;
     try {
-      const res = await base44.functions.invoke("ratePost", { post_id: post.id, value });
+      const res = await api.functions.invoke("ratePost", { post_id: post.id, value });
       if (!res.data || res.data.error) {
         const err = res.data?.error;
         toast({ title: err === "rate_limited" ? "Slow down — too many ratings" : err === "blocked" ? "You can't rate this post" : err === "iconic_locked" ? "Iconic is locked — rate more to unlock" : "Couldn't rate", variant: "destructive" });
@@ -47,13 +48,12 @@ export default function RatingButtons({ post, currentRating, currentWord, onRate
 
       // update taste profile
       try {
-        const me = await base44.auth.me();
+        const me = await api.auth.me();
         if (post.author_id !== me.id) {
-          const tp = await base44.entities.UserTasteProfile.filter({ user_id: me.id }, "-updated_date", 1);
-          const { updateTasteProfile } = await import("@/lib/feed");
+          const tp = await api.entities.UserTasteProfile.filter({ user_id: me.id }, "-updated_date", 1);
           const updated = updateTasteProfile(tp[0] || { category_weights: {}, tag_weights: {}, taste_embedding: [] }, post, value);
-          if (tp[0]) await base44.entities.UserTasteProfile.update(tp[0].id, updated);
-          else await base44.entities.UserTasteProfile.create({ user_id: me.id, ...updated });
+          if (tp[0]) await api.entities.UserTasteProfile.update(tp[0].id, updated);
+          else await api.entities.UserTasteProfile.create({ user_id: me.id, ...updated });
         }
       } catch (e) {}
 
@@ -74,7 +74,7 @@ export default function RatingButtons({ post, currentRating, currentWord, onRate
     if (!active) return;
     setLoading(true);
     try {
-      const res = await base44.functions.invoke("ratePost", { post_id: post.id, value: active, word });
+      const res = await api.functions.invoke("ratePost", { post_id: post.id, value: active, word });
       if (!res.data || res.data.error) {
         toast({ title: "Couldn't save word", variant: "destructive" });
         return;
@@ -108,7 +108,7 @@ export default function RatingButtons({ post, currentRating, currentWord, onRate
               <span className="text-2xl leading-none">{locked ? <Lock size={18} /> : r.emoji}</span>
               <span className="text-[11px] font-bold">{r.text}</span>
               {isActive && (
-                <span className="absolute inset-0 rounded-2xl ring-2 ring-offset-2 ring-offset-background" style={{ "--tw-ring-color": r.bg }} />
+                <span className="absolute inset-0 rounded-2xl ring-2 ring-offset-2 ring-offset-background" style={/** @type {React.CSSProperties & {"--tw-ring-color": string}} */ ({ "--tw-ring-color": r.bg })} />
               )}
             </button>
           );

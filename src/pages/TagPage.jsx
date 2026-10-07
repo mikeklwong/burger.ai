@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
-import { base44 } from "@/api/base44Client";
+import { api } from "@/api/client";
 import PostGrid from "@/components/PostGrid";
 import { normalizeTag } from "@/lib/ratings";
 import TagTrend from "@/components/TagTrend";
@@ -17,14 +17,14 @@ export default function TagPage() {
     (async () => {
       setLoading(true);
       try {
-        const me = await base44.auth.me();
+        const me = await api.auth.me();
         const hiddenIds = await getHiddenUserIds(me.id);
-        const all = await base44.entities.Post.list("-created_date", 300);
+        const all = await api.entities.Post.list("-created_date", 300);
         const nt = normalizeTag(tag);
         const matching = all.filter((p) => (p.tags || []).some((t) => normalizeTag(t) === nt) && !hiddenIds.has(p.author_id));
         let sorted = [...matching];
         if (sort === "top") sorted.sort((a, b) => (b.avg_score || 0) - (a.avg_score || 0));
-        else sorted.sort((a, b) => new Date(b.created_date) - new Date(a.created_date));
+        else sorted.sort((a, b) => new Date(b.created_date).getTime() - new Date(a.created_date).getTime());
         setPosts(sorted);
         // related tags
         const counts = {};

@@ -26,11 +26,11 @@ export default function ProtectedRoute({ fallback = <DefaultFallback />, unauthe
     if (authError.type === 'user_not_registered') {
       return <UserNotRegisteredError />;
     }
-    return unauthenticatedElement;
+    return <div role="alert" className="p-8 text-center">{authError.message}<button className="block mx-auto mt-4 underline" onClick={checkUserAuth}>Retry</button></div>;
   }
 
   if (!isAuthenticated) {
-    return unauthenticatedElement;
+    return <div role="alert" className="p-8 text-center">{authError.message}<button className="block mx-auto mt-4 underline" onClick={checkUserAuth}>Retry</button></div>;
   }
 
   return <Outlet />;

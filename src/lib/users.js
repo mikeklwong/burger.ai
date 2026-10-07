@@ -1,4 +1,4 @@
-import { base44 } from "@/api/base44Client";
+import { api } from "@/api/client";
 
 // Fetch users by ids in batches, return map id->user
 export async function loadUsersByIds(ids) {
@@ -9,7 +9,7 @@ export async function loadUsersByIds(ids) {
   for (let i = 0; i < unique.length; i += 50) {
     const chunk = unique.slice(i, i + 50);
     try {
-      const users = await base44.entities.User.filter({ id: { $in: chunk } }, "-created_date", 50);
+      const users = await api.entities.User.filter({ id: { $in: chunk } }, "-created_date", 50);
       users.forEach((u) => { map[u.id] = u; });
     } catch (e) {}
   }
@@ -19,7 +19,7 @@ export async function loadUsersByIds(ids) {
 export async function loadUser(id) {
   if (!id) return null;
   try {
-    return await base44.entities.User.get(id);
+    return await api.entities.User.get(id);
   } catch (e) {
     const map = await loadUsersByIds([id]);
     return map[id] || null;

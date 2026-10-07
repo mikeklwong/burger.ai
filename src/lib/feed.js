@@ -18,7 +18,7 @@ export function emptyTasteProfile() {
 
 // Update taste profile after a rating. ratingValue: burger|mid|fire|tuff
 export function updateTasteProfile(profile, post, ratingValue) {
-  const weights = { tuff: 3, fire: 2, mid: 0, burger: -1 };
+  const weights = { iconic: 4, tuff: 3, fire: 2, mid: 0, burger: -1 };
   const w = weights[ratingValue];
   if (w === undefined) return profile;
 
@@ -33,7 +33,7 @@ export function updateTasteProfile(profile, post, ratingValue) {
   let taste = profile.taste_embedding && profile.taste_embedding.length === EMBED_DIM
     ? [...profile.taste_embedding] : zeroEmbedding();
   if (emb) {
-    const pull = { tuff: 0.25, fire: 0.12, mid: 0, burger: -0.06 }[ratingValue];
+    const pull = { iconic: 0.35, tuff: 0.25, fire: 0.12, mid: 0, burger: -0.06 }[ratingValue];
     if (pull) {
       for (let i = 0; i < EMBED_DIM; i++) {
         taste[i] = taste[i] + pull * (emb[i] - taste[i]);
@@ -93,7 +93,7 @@ export function rankForYou(posts, tasteProfile, opts = {}) {
     affinity = (affinity * 0.5 + tagAff * 0.5) * 0.2;
 
     const minRatings = 3;
-    const quality = (p.rating_count >= minRatings ? p.avg_score / 4 : (p.avg_score / 4) * (p.rating_count / minRatings)) * 0.15;
+    const quality = (p.rating_count >= minRatings ? p.avg_score / 5 : (p.avg_score / 5) * (p.rating_count / minRatings)) * 0.15;
 
     const ageDays = (now - new Date(p.created_date).getTime()) / 86400000;
     const freshness = Math.max(0, 1 - ageDays / 14) * 0.1;

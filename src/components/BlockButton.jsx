@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
+import { api } from "@/api/client";
 import { Ban, Undo2 } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { blockUser, unblockUser } from "@/lib/blocks";
@@ -12,8 +12,8 @@ export default function BlockButton({ targetUser, onBlocked }) {
   useEffect(() => {
     (async () => {
       try {
-        const me = await base44.auth.me();
-        const existing = await base44.entities.Block.filter({ blocker_id: me.id, blocked_id: targetUser.id }, "-created_date", 1);
+        const me = await api.auth.me();
+        const existing = await api.entities.Block.filter({ blocker_id: me.id, blocked_id: targetUser.id }, "-created_date", 1);
         setBlocked(existing.length > 0);
       } catch (e) {}
     })();
@@ -24,7 +24,7 @@ export default function BlockButton({ targetUser, onBlocked }) {
       if (!confirm(`Unblock @${targetUser.username}?`)) return;
       setLoading(true);
       try {
-        const me = await base44.auth.me();
+        const me = await api.auth.me();
         await unblockUser(me.id, targetUser.id);
         setBlocked(false);
         toast({ title: `Unblocked @${targetUser.username}` });
@@ -38,7 +38,7 @@ export default function BlockButton({ targetUser, onBlocked }) {
     if (!confirm(`Block @${targetUser.username}? They won't see your posts or be able to rate you.`)) return;
     setLoading(true);
     try {
-      const me = await base44.auth.me();
+      const me = await api.auth.me();
       await blockUser(me.id, targetUser.id);
       setBlocked(true);
       toast({ title: `Blocked @${targetUser.username}` });

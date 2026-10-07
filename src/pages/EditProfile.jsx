@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { base44 } from "@/api/base44Client";
+import { api } from "@/api/client";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 
@@ -15,7 +15,7 @@ export default function EditProfile() {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    base44.auth.me().then((m) => {
+    api.auth.me().then((m) => {
       setMe(m); setUsername(m.username || ""); setDisplayName(m.display_name || ""); setBio(m.bio || ""); setPicUrl(m.profile_picture || null);
     });
   }, []);
@@ -24,7 +24,7 @@ export default function EditProfile() {
     const file = e.target.files?.[0];
     if (!file) return;
     try {
-      const { file_url } = await base44.integrations.Core.UploadPublicFile({ file });
+      const { file_url } = await api.integrations.Core.UploadPublicFile({ file });
       setPicUrl(file_url);
     } catch (err) {}
   };
@@ -32,7 +32,7 @@ export default function EditProfile() {
   const save = async () => {
     setSaving(true);
     try {
-      await base44.auth.updateMe({ username, display_name: displayName, bio: bio.slice(0, 150), profile_picture: picUrl });
+      await api.auth.updateMe({ username, display_name: displayName, bio: bio.slice(0, 150), profile_picture: picUrl });
       toast({ title: "Profile updated" });
       navigate(-1);
     } catch (e) {

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { base44 } from "@/api/base44Client";
+import { api } from "@/api/client";
 import UserAvatar from "@/components/UserAvatar";
 import { loadUsersByIds } from "@/lib/users";
 import { RATINGS } from "@/lib/ratings";
@@ -14,13 +14,13 @@ export default function Notifications() {
   useEffect(() => {
     (async () => {
       try {
-        const me = await base44.auth.me();
-        const ns = await base44.entities.Notification.filter({ user_id: me.id }, "-created_date", 100);
+        const me = await api.auth.me();
+        const ns = await api.entities.Notification.filter({ user_id: me.id }, "-created_date", 100);
         setNotifs(ns);
         const aMap = await loadUsersByIds(ns.map((n) => n.actor_id));
         setActors(aMap);
         // mark read
-        ns.filter((n) => !n.read).forEach((n) => base44.entities.Notification.update(n.id, { read: true }));
+        ns.filter((n) => !n.read).forEach((n) => api.entities.Notification.update(n.id, { read: true }));
       } catch (e) {} finally { setLoading(false); }
     })();
   }, []);

@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 
 const ToastProvider = ToastPrimitives.Provider;
 
+/** @type {React.ForwardRefExoticComponent<React.ComponentPropsWithoutRef<typeof ToastPrimitives.Viewport> & React.RefAttributes<HTMLOListElement>>} */
 const ToastViewport = React.forwardRef(({ className, ...props }, ref) => (
   <ToastPrimitives.Viewport
     ref={ref}
@@ -34,6 +35,7 @@ const toastVariants = cva(
   }
 );
 
+/** @type {React.ForwardRefExoticComponent<React.ComponentPropsWithoutRef<typeof ToastPrimitives.Root> & {variant?: 'default'|'destructive'} & React.RefAttributes<HTMLLIElement>>} */
 const Toast = React.forwardRef(({ className, variant, ...props }, ref) => {
   return (
     <ToastPrimitives.Root
@@ -45,6 +47,7 @@ const Toast = React.forwardRef(({ className, variant, ...props }, ref) => {
 });
 Toast.displayName = ToastPrimitives.Root.displayName;
 
+/** @type {React.ForwardRefExoticComponent<React.ComponentPropsWithoutRef<typeof ToastPrimitives.Action> & React.RefAttributes<HTMLButtonElement>>} */
 const ToastAction = React.forwardRef(({ className, ...props }, ref) => (
   <ToastPrimitives.Action
     ref={ref}
@@ -57,6 +60,7 @@ const ToastAction = React.forwardRef(({ className, ...props }, ref) => (
 ));
 ToastAction.displayName = ToastPrimitives.Action.displayName;
 
+/** @type {React.ForwardRefExoticComponent<React.ComponentPropsWithoutRef<typeof ToastPrimitives.Close> & React.RefAttributes<HTMLButtonElement>>} */
 const ToastClose = React.forwardRef(({ className, ...props }, ref) => (
   <ToastPrimitives.Close
     ref={ref}
@@ -64,6 +68,7 @@ const ToastClose = React.forwardRef(({ className, ...props }, ref) => (
       "absolute right-2 top-2 rounded-md p-1 text-foreground/50 opacity-0 transition-opacity hover:text-foreground focus:opacity-100 focus:outline-none focus:ring-2 group-hover:opacity-100 group-[.destructive]:text-red-300 group-[.destructive]:hover:text-red-50 group-[.destructive]:focus:ring-red-400 group-[.destructive]:focus:ring-offset-red-600",
       className
     )}
+    aria-label="Dismiss notification"
     toast-close=""
     {...props}
   >
@@ -72,6 +77,7 @@ const ToastClose = React.forwardRef(({ className, ...props }, ref) => (
 ));
 ToastClose.displayName = ToastPrimitives.Close.displayName;
 
+/** @type {React.ForwardRefExoticComponent<React.ComponentPropsWithoutRef<typeof ToastPrimitives.Title> & React.RefAttributes<HTMLDivElement>>} */
 const ToastTitle = React.forwardRef(({ className, ...props }, ref) => (
   <ToastPrimitives.Title
     ref={ref}
@@ -81,6 +87,7 @@ const ToastTitle = React.forwardRef(({ className, ...props }, ref) => (
 ));
 ToastTitle.displayName = ToastPrimitives.Title.displayName;
 
+/** @type {React.ForwardRefExoticComponent<React.ComponentPropsWithoutRef<typeof ToastPrimitives.Description> & React.RefAttributes<HTMLDivElement>>} */
 const ToastDescription = React.forwardRef(({ className, ...props }, ref) => (
   <ToastPrimitives.Description
     ref={ref}

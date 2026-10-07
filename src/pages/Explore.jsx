@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { base44 } from "@/api/base44Client";
+import { api } from "@/api/client";
 import CategoryChips from "@/components/CategoryChips";
 import PostGrid from "@/components/PostGrid";
 import UserAvatar from "@/components/UserAvatar";
@@ -22,10 +22,10 @@ export default function Explore() {
   useEffect(() => {
     (async () => {
       try {
-        const me = await base44.auth.me();
+        const me = await api.auth.me();
         const hidden = await getHiddenUserIds(me.id);
         setHiddenIds(hidden);
-        const all = await base44.entities.Post.list("-created_date", 200);
+        const all = await api.entities.Post.list("-created_date", 200);
         const vis = all.filter((p) => !hidden.has(p.author_id));
         const filtered = category ? vis.filter((p) => p.category === category) : vis;
         setPosts(filtered);
@@ -46,9 +46,9 @@ export default function Explore() {
     const t = setTimeout(async () => {
       try {
         const q = query.toLowerCase().replace(/^#/, "");
-        const users = await base44.entities.User.filter({}, "-created_date", 100);
+        const users = await api.entities.User.filter({}, "-created_date", 100);
         setUserResults(users.filter((u) => !hiddenIds.has(u.id) && ((u.username || "").toLowerCase().includes(q) || (u.display_name || "").toLowerCase().includes(q))).slice(0, 8));
-        const all = await base44.entities.Post.list("-created_date", 200);
+        const all = await api.entities.Post.list("-created_date", 200);
         const tagCounts = {};
         all.forEach((p) => (p.tags || []).forEach((tg) => { const nt = normalizeTag(tg); if (nt.includes(q)) tagCounts[nt] = (tagCounts[nt] || 0) + 1; }));
         setTagResults(Object.entries(tagCounts).sort((a, b) => b[1] - a[1]).slice(0, 8).map(([t, c]) => ({ tag: t, count: c })));

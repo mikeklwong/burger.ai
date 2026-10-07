@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
-import { base44 } from "@/api/base44Client";
+import { api } from "@/api/client";
 import { useToast } from "@/components/ui/use-toast";
 import { ArrowLeft, Globe, Lock, Trash2, X } from "lucide-react";
 import { Image } from "@/components/ui/image";
@@ -18,8 +18,8 @@ export default function CollectionDetail() {
 
   const load = async () => {
     try {
-      const me = await base44.auth.me();
-      const c = await base44.entities.Collection.get(id);
+      const me = await api.auth.me();
+      const c = await api.entities.Collection.get(id);
       if (!c) { navigate("/"); return; }
       const own = c.user_id === me.id;
       setIsOwner(own);
@@ -30,7 +30,7 @@ export default function CollectionDetail() {
       const fetched = [];
       for (let i = 0; i < ids.length; i += 50) {
         const chunk = ids.slice(i, i + 50);
-        const ps = await base44.entities.Post.filter({ id: { $in: chunk } }, "-created_date", 50);
+        const ps = await api.entities.Post.filter({ id: { $in: chunk } }, "-created_date", 50);
         fetched.push(...ps);
       }
       const map = new Map(fetched.map((p) => [p.id, p]));
@@ -48,7 +48,7 @@ export default function CollectionDetail() {
   const togglePublic = async () => {
     try {
       const next = !collection.is_public;
-      await base44.entities.Collection.update(collection.id, { is_public: next });
+      await api.entities.Collection.update(collection.id, { is_public: next });
       setCollection({ ...collection, is_public: next });
       toast({ title: next ? "Collection published" : "Collection set to private" });
     } catch (e) {
@@ -60,7 +60,7 @@ export default function CollectionDetail() {
     const next = (collection.post_ids || []).filter((x) => x !== postId);
     const cover = next.length === 0 ? null : (collection.cover_post_id === postId ? next[0] : collection.cover_post_id);
     try {
-      await base44.entities.Collection.update(collection.id, { post_ids: next, cover_post_id: cover });
+      await api.entities.Collection.update(collection.id, { post_ids: next, cover_post_id: cover });
       setCollection({ ...collection, post_ids: next, cover_post_id: cover });
       setPosts((p) => p.filter((x) => x.id !== postId));
     } catch (e) {
@@ -71,7 +71,7 @@ export default function CollectionDetail() {
   const del = async () => {
     if (!confirm("Delete this collection?")) return;
     try {
-      await base44.entities.Collection.delete(collection.id);
+      await api.entities.Collection.delete(collection.id);
       navigate(-1);
     } catch (e) {
       toast({ title: "Couldn't delete", variant: "destructive" });

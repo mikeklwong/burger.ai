@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
-import { base44 } from "@/api/base44Client";
+import { api } from "@/api/client";
 import { Image } from "@/components/ui/image";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
@@ -30,14 +30,14 @@ export default function PostDetail() {
 
   const load = async () => {
     try {
-      const me = await base44.auth.me();
-      const p = await base44.entities.Post.get(id);
+      const me = await api.auth.me();
+      const p = await api.entities.Post.get(id);
       setPost(p);
       setAuthor(await loadUser(p.author_id));
       // block check (both directions)
       let isBlocked = false;
       if (p.author_id !== me.id) {
-        const bl = await base44.entities.Block.filter(
+        const bl = await api.entities.Block.filter(
           { $or: [{ blocker_id: me.id, blocked_id: p.author_id }, { blocker_id: p.author_id, blocked_id: me.id }] },
           "-created_date", 1
         );
@@ -46,12 +46,12 @@ export default function PostDetail() {
       }
       // increment view
       if (p.author_id !== me.id && !isBlocked) {
-        await base44.entities.Post.update(p.id, { view_count: (p.view_count || 0) + 1 });
+        await api.entities.Post.update(p.id, { view_count: (p.view_count || 0) + 1 });
       }
-      const myR = await base44.entities.Rating.filter({ user_id: me.id, post_id: id }, "-created_date", 1);
+      const myR = await api.entities.Rating.filter({ user_id: me.id, post_id: id }, "-created_date", 1);
       setMyRating(myR[0]?.value || null);
       setMyRatingWord(myR[0]?.word || null);
-      const cs = await base44.entities.Comment.filter({ post_id: id }, "-created_date", 100);
+      const cs = await api.entities.Comment.filter({ post_id: id }, "-created_date", 100);
       setComments(cs);
       const aMap = await loadUsersByIds(cs.map((c) => c.author_id));
       setCommentAuthors(aMap);
@@ -68,13 +68,13 @@ export default function PostDetail() {
   const submitComment = async () => {
     if (!newComment.trim()) return;
     try {
-      const me = await base44.auth.me();
-      const c = await base44.entities.Comment.create({ post_id: id, author_id: me.id, text: newComment.trim().slice(0, 500) });
+      const me = await api.auth.me();
+      const c = await api.entities.Comment.create({ post_id: id, author_id: me.id, text: newComment.trim().slice(0, 500) });
       setComments([c, ...comments]);
       setCommentAuthors((p) => ({ ...p, [me.id]: me }));
       setNewComment("");
       if (post.author_id !== me.id) {
-        await base44.entities.Notification.create({ user_id: post.author_id, type: "comment", actor_id: me.id, post_id: id });
+        await api.entities.Notification.create({ user_id: post.author_id, type: "comment", actor_id: me.id, post_id: id });
       }
     } catch (e) {
       toast({ title: "Couldn't comment", variant: "destructive" });
@@ -85,8 +85,8 @@ export default function PostDetail() {
     const reason = prompt("Reason for reporting?");
     if (!reason) return;
     try {
-      const me = await base44.auth.me();
-      await base44.entities.Report.create({ reporter_id: me.id, target_type: "post", target_id: id, reason });
+      const me = await api.auth.me();
+      await api.entities.Report.create({ reporter_id: me.id, target_type: "post", target_id: id, reason });
       toast({ title: "Reported. Thanks for keeping burger.ai clean." });
     } catch (e) {}
   };
@@ -173,7 +173,7 @@ export default function PostDetail() {
         {post.caption && <p className="mb-3 text-sm">{post.caption}</p>}
         {post.style_description && (
           <p className="mb-4 rounded-lg border-l-2 border-primary/40 bg-primary/5 p-2 text-xs italic text-muted-foreground">
-            🤖 {post.style_description}
+            {post.description_source === "ai" ? "AI style notes: " : "Style notes: "}{post.style_description}
           </p>
         )}
 

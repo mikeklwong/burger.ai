@@ -1,82 +1,76 @@
 # Development guide
 
-Use this repository to run and edit the app locally, then publish changes back through Base44.
+## Requirements and startup
 
-If this repository is connected through the Base44 GitHub integration, pushed changes sync to the Base44 Builder. Creating this GitHub repository alone does not establish that connection.
-
-## Prerequisites
-
-1. Clone the repository using the project's Git URL.
-2. Navigate to the project directory.
-3. Install dependencies: `npm install`.
-4. Install the Base44 CLI: `npm install -g base44@latest`.
-5. Install [Deno](https://docs.deno.com/runtime/getting_started/installation/) — the local Base44 backend runs on it.
-
-Run `base44 --help` (or see the [CLI reference](https://docs.base44.com/developers/references/cli/commands/introduction)) for the full command surface.
-
-## Run Locally
-
-Three commands, from the project root:
+Install Node.js 22.12 or newer (with npm). No Base44 account, database service, Stripe keys, or environment file is required.
 
 ```bash
-base44 login   # one-time per machine
-base44 link    # one-time per clone
-base44 dev     # local backend + frontend together
+npm ci
+npm run dev
 ```
 
-Open the frontend URL that `base44 dev` prints (typically `http://localhost:5173`).
+Open http://localhost:5173. This command starts the Node API on port 3001 and Vite on port 5173. If either process fails, both stop. Press Ctrl+C to stop them. Avoid running another copy on the same ports.
 
-Notes:
+## Data and authentication
 
-- **Every fresh clone needs `base44 link`.** It writes `base44/.app.jsonc` (the app-id pointer), which is deliberately gitignored. Your app id is in the Builder URL (`app.base44.com/apps/<id>/...`); `base44 link --help` shows the non-interactive flags.
-- **`base44 dev` runs the frontend for you** (via `site.serveCommand` in this repo's `base44/config.jsonc`) — never run `npm run dev` yourself: alone it serves a UI with no backend behind it (`[base44] Proxy not enabled`, every `/api` call fails), and alongside `base44 dev` the second Vite silently takes the next port and you end up looking at the wrong one.
-- **The app must be published at least once for the UI to load under `base44 dev`.** The frontend boots by fetching app settings from the hosted app; before the first publish that fails and every page redirects to login. The local API works regardless.
-- Entities, functions, and auth run locally — entity data is **in-memory only**, wiped when `base44 dev` restarts. Everything else (Core integrations, OAuth login) is forwarded to your deployed app. Full breakdown: [Local development overview](https://docs.base44.com/developers/backend/overview/local-dev/local-development-overview).
+The server creates `.data/database.json` and `.data/uploads/` automatically. Users of the same server share its posts and accounts. Passwords use salted scrypt hashes; sessions use HttpOnly cookies and expire after seven days. Private collections and user-owned edits are checked on the server. Back up the entire data directory together and keep it out of git.
 
-## Frontend Only, Hosted Backend
+**Try the demo** creates a guest account and signs it in immediately. Sample posts are local outfit illustrations, not real users or AI-generated photographs. Register with an email and password to keep a normal account. This edition does not send verification or recovery emails and does not support Google login.
 
-To work on just the frontend against your app's live hosted backend:
+To recover an account, stop the server first, then run:
 
 ```bash
-base44 dev --remote
+npm run reset-password -- user@example.com
 ```
 
-⚠️ In this mode writes go to your app's **production data** — plain `base44 dev` keeps everything local.
+This operator-only command prints a new password and invalidates the account's sessions. Share it privately with the account owner and restart the server. Do not run this command while the server is running.
 
-## Publish Your Changes
+## Optional AI
 
-After pushing your changes to git, open the Base44 dashboard and publish the app:
+The platform works without AI credentials. By default, style notes summarize the selected category and tags, and recommendation vectors are deterministic tag/category features. This mode does not inspect image content or perform automated image moderation.
 
-```bash
-base44 dashboard open
+To enable real image descriptions and an automated explicit-image check, create an optional `.env`:
+
+```dotenv
+OPENAI_API_KEY=your-own-key
+OPENAI_MODEL=gpt-4.1-mini
 ```
 
-This repo syncs to Base44 through git, so publish from the dashboard rather than `base44 deploy` — a CLI deploy ships your local tree directly, bypassing the sync, and the deployed state silently diverges from the repo.
+Restart the app after changing it. The backend sends the uploaded image to OpenAI only when the operator configures this key. API usage may incur charges to that operator. The key stays on the server. Choose a vision model available to your account; model availability is not needed for the rest of the app. The integration uses image inputs documented in the [official OpenAI vision guide](https://developers.openai.com/api/docs/guides/images-vision).
 
-## Docs & Support
+If the provider is unavailable, posting still works with tag-based notes. The response records whether the notes came from AI or tags; failed moderation is marked unchecked. Automated moderation is not a replacement for reports or a human moderation process.
 
-GitHub integration: [https://docs.base44.com/developers/app-code/local-development/github](https://docs.base44.com/developers/app-code/local-development/github)
-
-Local development: [https://docs.base44.com/developers/backend/overview/local-dev/local-development-overview](https://docs.base44.com/developers/backend/overview/local-dev/local-development-overview)
-
-Support: [https://app.base44.com/support](https://app.base44.com/support)
-
-## Configuration
-
-The frontend reads `VITE_BASE44_APP_ID`, `VITE_BASE44_APP_BASE_URL`, and `VITE_BASE44_FUNCTIONS_VERSION` in `src/lib/app-params.js`. Obtain the correct values from your Base44 app configuration; these are public frontend settings, not secrets. Authentication tokens are managed by the SDK.
-
-For subscription functionality, configure `STRIPE_SECRET_KEY` and `STRIPE_WEBHOOK_SECRET` in backend secret storage. The uploaded checkout function has an existing Stripe price ID and fallback origin; adapt these to your own Stripe product and deployed app before enabling payments.
-
-## Checks
+## Build and self-host
 
 ```bash
-npm run lint
+npm run build
+npm start
+```
+
+Open http://127.0.0.1:3001. The same Node server serves the built frontend and API. Hosting requires a Node process and persistent writable disk; a static-only host or GitHub Pages cannot run this backend.
+
+Optional production environment settings:
+
+| Setting | Default | Purpose |
+| --- | --- | --- |
+| `PORT` | `3001` | Production HTTP port |
+| `HOST` | `127.0.0.1` | Bind address; set `0.0.0.0` behind your hosting provider's HTTPS proxy |
+| `DATA_DIR` | `.data` | Persistent database and upload directory |
+| `COOKIE_SECURE` | unset | Set `true` when serving through HTTPS |
+| `OPENAI_API_KEY` | unset | Enable optional image analysis |
+| `OPENAI_MODEL` | `gpt-4.1-mini` | Vision model used by the optional provider |
+
+For a public installation, use HTTPS, keep the data directory private, and arrange backups and moderation. This file-backed backend is intended for small single-process instances. It is not a distributed database and does not provide production email delivery or a complete moderation/admin dashboard. All edition features are free; there is no payment flow.
+
+## Verification
+
+```bash
+npm test
 npm run typecheck
+npm run lint
 npm run build
 ```
 
-A build alone does not verify authentication, database permissions, AI integration, image uploads, or payments. Validate these with a configured development app.
+Tests create isolated temporary stores and cover registrations, sessions, uploads, posting, rating replacement and aggregates, comments, follows, notifications, blocking, private collections, ownership, cross-origin mutation rejection, account deletion, AI fallback, and persistence across restarts. Real paid AI calls are not used in tests.
 
-## Source import validation
-
-On October 7, 2026, dependencies installed successfully and the production build passed. Unused imports were removed and ESLint passed afterward. Type checking still reports existing JavaScript prop inference and SDK typing errors across the imported app. The build warns about a large frontend bundle and requires Base44 app settings for working API calls. Authenticated end-to-end flows were not tested because a Base44 development backend was not configured.
+The frontend type check retains `checkJs: true` and covers application JavaScript, JSX, TypeScript, and imported shared components. Shared ref components have explicit prop types; errors are not hidden with suppression comments.

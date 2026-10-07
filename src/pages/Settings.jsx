@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { base44 } from "@/api/base44Client";
+import { api } from "@/api/client";
 import { useToast } from "@/components/ui/use-toast";
 import { Bell, UserCog, Crown, Shield, LogOut, Trash2, RotateCcw, Palette, Check, Ban } from "lucide-react";
 import { THEMES, applyTheme, getStoredTheme } from "@/lib/themes";
@@ -13,7 +13,7 @@ export default function Settings() {
 
   useEffect(() => {
     (async () => {
-      const m = await base44.auth.me();
+      const m = await api.auth.me();
       setMe(m);
       setTheme(getStoredTheme());
     })();
@@ -25,17 +25,14 @@ export default function Settings() {
   };
 
   const logout = async () => {
-    await base44.auth.logout();
+    await api.auth.logout();
     navigate("/login");
   };
 
   const deleteAccount = async () => {
     if (!confirm("Permanently delete your account and all data? This cannot be undone.")) return;
     try {
-      await base44.entities.Post.deleteMany({ author_id: me.id });
-      await base44.entities.Rating.deleteMany({ user_id: me.id });
-      await base44.entities.Follow.deleteMany({ $or: [{ follower_id: me.id }, { following_id: me.id }] });
-      await base44.entities.UserTasteProfile.deleteMany({ user_id: me.id });
+      await api.auth.deleteAccount();
       toast({ title: "Account data deleted." });
       await logout();
     } catch (e) {
@@ -43,7 +40,7 @@ export default function Settings() {
     }
   };
 
-  const Row = ({ icon: Icon, label, onClick, danger }) => (
+  const Row = ({ icon: Icon, label, onClick, danger = false }) => (
     <button onClick={onClick} className={`flex w-full items-center gap-3 border-b border-border px-4 py-4 text-left ${danger ? "text-destructive" : ""}`}>
       <Icon size={20} /> <span className="flex-1 text-sm font-medium">{label}</span>
     </button>
@@ -57,9 +54,9 @@ export default function Settings() {
       <div className="px-4">
         <div className="overflow-hidden rounded-2xl border border-border">
           <Row icon={UserCog} label="Edit profile" onClick={() => navigate("/edit-profile")} />
-          <Row icon={Crown} label="Manage Pro subscription" onClick={() => navigate("/pro")} />
+          <Row icon={Crown} label="Free edition features" onClick={() => navigate("/pro")} />
           <Row icon={RotateCcw} label="Replay tutorial" onClick={() => navigate("/onboarding")} />
-          <Row icon={Shield} label="Privacy & data" onClick={() => toast({ title: "Profile views are tracked. Pro users can see who viewed them." })} />
+          <Row icon={Shield} label="Privacy & data" onClick={() => toast({ title: "Profile visits are visible to the profile owner." })} />
           <Row icon={Ban} label="Blocked accounts" onClick={() => navigate("/blocked")} />
           <Row icon={Bell} label="Notifications" onClick={() => navigate("/notifications")} />
           <Row icon={LogOut} label="Log out" onClick={logout} />

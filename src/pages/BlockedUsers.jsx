@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { base44 } from "@/api/base44Client";
+import { api } from "@/api/client";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
@@ -16,7 +16,7 @@ export default function BlockedUsers() {
 
   const load = async () => {
     try {
-      const me = await base44.auth.me();
+      const me = await api.auth.me();
       const ids = await getBlockedIds(me.id);
       const map = await loadUsersByIds(ids);
       setBlocked(ids.map((id) => map[id]).filter(Boolean));
@@ -29,7 +29,7 @@ export default function BlockedUsers() {
 
   const unblock = async (u) => {
     try {
-      const me = await base44.auth.me();
+      const me = await api.auth.me();
       await unblockUser(me.id, u.id);
       toast({ title: `Unblocked @${u.username}` });
       load();

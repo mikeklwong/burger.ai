@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
+import { api } from "@/api/client";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 
-export default function FollowButton({ targetUser, onChange }) {
+export default function FollowButton({ targetUser, onChange = undefined }) {
   const { toast } = useToast();
   const [following, setFollowing] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -12,9 +12,9 @@ export default function FollowButton({ targetUser, onChange }) {
     let active = true;
     (async () => {
       try {
-        const me = await base44.auth.me();
+        const me = await api.auth.me();
         if (!me || me.id === targetUser.id) return;
-        const existing = await base44.entities.Follow.filter({ follower_id: me.id, following_id: targetUser.id }, "-created_date", 1);
+        const existing = await api.entities.Follow.filter({ follower_id: me.id, following_id: targetUser.id }, "-created_date", 1);
         if (active) setFollowing(existing.length > 0);
       } catch (e) {}
     })();
@@ -24,7 +24,7 @@ export default function FollowButton({ targetUser, onChange }) {
   const toggle = async () => {
     setLoading(true);
     try {
-      const res = await base44.functions.invoke("toggleFollow", { target_id: targetUser.id });
+      const res = await api.functions.invoke("toggleFollow", { target_id: targetUser.id });
       if (!res.data || res.data.error) {
         const err = res.data?.error;
         toast({ title: err === "rate_limited" ? "Slow down — too many follows" : err === "blocked" ? "You can't follow this account" : "Something went wrong", variant: "destructive" });
