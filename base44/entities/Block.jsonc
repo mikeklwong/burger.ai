@@ -1,0 +1,16 @@
+{
+  "name": "Block",
+  "type": "object",
+  "properties": {
+    "blocker_id": {
+      "type": "string"
+    },
+    "blocked_id": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "blocker_id",
+    "blocked_id"
+  ]
+}

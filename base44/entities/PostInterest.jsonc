@@ -1,0 +1,24 @@
+{
+  "name": "PostInterest",
+  "type": "object",
+  "properties": {
+    "user_id": {
+      "type": "string"
+    },
+    "post_id": {
+      "type": "string"
+    },
+    "value": {
+      "type": "string",
+      "enum": [
+        "interested",
+        "not_interested"
+      ]
+    }
+  },
+  "required": [
+    "user_id",
+    "post_id",
+    "value"
+  ]
+}
